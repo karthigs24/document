@@ -10,8 +10,8 @@ import {
   ProgressBar,
 } from 'react-bootstrap';
 import { FaPlus, FaTrash, FaArrowLeft, FaArrowRight, FaUpload } from 'react-icons/fa';
-import AddApplicant from './components/AddApplicant.jsx'; // Ensure correct file path
-import AddDocument from './components/AddDocument.jsx';   // Ensure correct file path
+import AddApplicant from './components/AddApplicant.jsx';
+import AddDocument from './components/AddDocument.jsx';
 
 function App() {
   const [applicants, setApplicants] = useState([]);
@@ -30,7 +30,7 @@ function App() {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [currentApplicantIndex, setCurrentApplicantIndex] = useState(0);
 
-  const fileInputRef = useRef(null); // Create a ref
+  const fileInputRef = useRef(null);
 
   const handleAddApplicant = () => setShowApplicantModal(true);
 
@@ -114,16 +114,15 @@ function App() {
       ),
     }));
   };
-  
+
   const handleFileChange = (event, document) => {
-    const file = event.target.files[0]; // Get the selected file
+    const file = event.target.files[0];
     console.log(`File selected for ${document.name}:`, file);
 
-    // Store the selected file in the document object (or a separate state variable)
     setDocuments((prevDocuments) => ({
       ...prevDocuments,
       [currentApplicant.id]: prevDocuments[currentApplicant.id].map((doc) =>
-        doc.id === document.id ? { ...doc, file: file } : doc // Update the document with the file
+        doc.id === document.id ? { ...doc, file: file } : doc
       ),
     }));
   };
@@ -134,10 +133,10 @@ function App() {
       return;
     }
 
-    const file = document.file; // Access the file from the document object
+    const file = document.file;
     setUploading(true);
     const formData = new FormData();
-    formData.append('file', file); // Append the file to the form data
+    formData.append('file', file);
 
     fetch('/your-api-endpoint', {
       method: 'POST',
@@ -162,7 +161,6 @@ function App() {
         setUploadProgress(0);
       });
 
-    // Simulate upload progress (remove in production)
     let progress = 0;
     const interval = setInterval(() => {
       progress += 10;
@@ -241,7 +239,7 @@ function App() {
           </Button>
         </Col>
       </Row>
-  
+
       <Row>
         <Col md={3}>
           <h2 className="text-secondary">Applicants</h2>
@@ -269,7 +267,7 @@ function App() {
             ))}
           </ListGroup>
         </Col>
-  
+
         <Col md={9}>
           {currentApplicant && (
             <Card className="document-section mb-4">
@@ -334,7 +332,7 @@ function App() {
                                   </Button>
                                 </label>
                               </div>
-  
+
                               <div className="mt-2 d-flex justify-content-end">
                                 <Button
                                   variant="success"
@@ -363,7 +361,7 @@ function App() {
                                   Clear
                                 </Button>
                               </div>
-  
+
                               {uploading && uploadProgress > 0 && (
                                 <ProgressBar animated now={uploadProgress} label={`${uploadProgress}%`} className="mt-2" />
                               )}
@@ -376,7 +374,7 @@ function App() {
                 ) : (
                   <p>No documents added yet.</p>
                 )}
-  
+
                 {documents[currentApplicant.id] && documents[currentApplicant.id].length > 1 && (
                   <div className="d-flex justify-content-between mt-3">
                     <Button
@@ -400,7 +398,7 @@ function App() {
           )}
         </Col>
       </Row>
-  
+
       {applicants.length > 1 && (
         <Row className="mt-3">
           <Col>
@@ -423,7 +421,7 @@ function App() {
           </Col>
         </Row>
       )}
-  
+
       {/* Modals */}
       <AddApplicant
         show={showApplicantModal}
@@ -432,7 +430,7 @@ function App() {
         newApplicantName={newApplicantName}
         setNewApplicantName={setNewApplicantName}
       />
-  
+
       <AddDocument
         show={showDocumentModal}
         handleClose={handleCloseDocumentModal}
@@ -442,9 +440,6 @@ function App() {
       />
     </Container>
   );
-  
-
-
 }
 
 export default App;
