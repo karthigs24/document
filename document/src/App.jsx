@@ -359,18 +359,21 @@ function App() {
           )}
         </Col>
       </Row>
-      <Row className="mt-3">
-        <Col>
-          <div className="d-flex justify-content-between">
-            <Button variant="secondary" onClick={handleBackApplicant} disabled={currentApplicantIndex === 0}>
-              ← Back
-            </Button>
-            <Button variant="primary" onClick={handleNextApplicant} disabled={currentApplicantIndex === applicants.length - 1}>
-              Next →
-            </Button>
-          </div>
-        </Col>
-      </Row>
+
+      {applicants.length > 1 && ( // Conditional rendering for applicant buttons
+        <Row className="mt-3">
+          <Col>
+            <div className="d-flex justify-content-between">
+              <Button variant="secondary" onClick={handleBackApplicant} disabled={currentApplicantIndex === 0}>
+                ← Back
+              </Button>
+              <Button variant="primary" onClick={handleNextApplicant} disabled={currentApplicantIndex === applicants.length - 1}>
+                Next →
+              </Button>
+            </div>
+          </Col>
+        </Row>
+      )}
 
       {/* Modals */}
       <AddApplicant
