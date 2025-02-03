@@ -20,7 +20,6 @@ function App() {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [currentApplicantIndex, setCurrentApplicantIndex] = useState(0);
 
-
   const handleAddApplicant = () => {
     setShowApplicantModal(true);
   };
@@ -50,7 +49,7 @@ function App() {
 
   const handleApplicantSelect = (applicant) => {
     setCurrentApplicant(applicant);
-    setCurrentDocumentIndex(0); // Reset document index when selecting a new applicant
+    setCurrentDocumentIndex(0);
   };
 
   const handleDeleteApplicant = (applicantId) => {
@@ -184,22 +183,20 @@ function App() {
     }
   };
 
-
   return (
     <Container>
-      {/* Header */}
       <Row className="align-items-center justify-content-between mb-3">
         <Col>
           <h1>Document Upload</h1>
         </Col>
         <Col xs="auto">
-          <Button onClick={handleAddApplicant}>+ Add Applicant</Button>
+          <Button onClick={handleAddApplicant} variant="primary">
+            + Add Applicant
+          </Button>
         </Col>
       </Row>
 
-      {/* Main Content */}
       <Row>
-        {/* Applicants List */}
         <Col md={3}>
           <h2>Applicants</h2>
           {applicants.map((applicant) => (
@@ -226,120 +223,138 @@ function App() {
           ))}
         </Col>
 
-        {/* Applicant's Documents */}
         <Col md={9}>
           {currentApplicant && (
-            <div className="document-section">
+            <div
+              className="document-section"
+              style={{
+                border: '1px solid #ccc',
+                padding: '20px',
+                marginBottom: '20px',
+                borderRadius: '5px',
+              }}
+            >
               <Row className="align-items-center mb-3">
                 <Col>
                   <h2>{currentApplicant.name} - Documents</h2>
                 </Col>
                 <Col xs="auto">
-                  <Button onClick={handleAddDocument}>+ Add Document</Button>
+                  <Button onClick={handleAddDocument} variant="primary">
+                    + Add Document
+                  </Button>
                 </Col>
               </Row>
 
               {documents[currentApplicant.id] && documents[currentApplicant.id].length > 0 ? (
-                documents[currentApplicant.id].map((document, docIndex) => (
-                  <div key={document.id} className="mb-3">
-                    <Row className="align-items-center">
-                      <Col md={8}>
-                        <Form.Group> {/* No controlId here */}
-                          <Form.Label htmlFor={`fileInput-${currentApplicant.id}-${document.id}`}> {/* htmlFor is correct */}
-                            {document.name}  {/* Or document.name if you prefer */}
-                          </Form.Label>
-                          <div
-                            className="border p-3 rounded d-flex align-items-center justify-content-center"
-                            onDragOver={handleDragOver}
-                            onDrop={(e) => handleFileDrop(e, document)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <Form.Control
-                              type="file"
-                              onChange={(e) => handleFileChange(e, document)}
-                              disabled={uploading}
-                              style={{ display: 'none' }}
-                              id={`fileInput-${currentApplicant.id}-${document.id}`} // ID is sufficient
-                            />
-                            <label htmlFor={`fileInput-${currentApplicant.id}-${document.id}`}>
-                              <p className="text-center m-0">Drag and Drop files here</p>
-                              <p className="text-center m-0">Or</p>
-                              <Button variant="primary" size="sm">
-                                Choose File
-                              </Button>
-                            </label>
-                          </div>
-
-                          {/* Upload and Cancel Buttons */}
-                          <div className="mt-2 d-flex justify-content-end">
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={() => {
-                                document.getElementById(`fileInput-${currentApplicant.id}-${document.id}`).click(); {/* Correct ID */ }
-                              }}
-                              disabled={uploading}
-                              className="mr-2"
+                <div>
+                  {documents[currentApplicant.id].map((document, docIndex) => (
+                    <div
+                      key={document.id}
+                      className={`mb-3 ${currentDocumentIndex === docIndex ? 'active-document' : ''}`}
+                      style={{
+                        backgroundColor: currentDocumentIndex === docIndex ? '#f0f0f0' : 'transparent',
+                        padding: '10px',
+                        borderRadius: '5px',
+                      }}
+                    >
+                      <Row className="align-items-center">
+                        <Col md={8}>
+                          <Form.Group>
+                            <Form.Label htmlFor={`fileInput-<span class="math-inline">\{currentApplicant\.id\}\-</span>{document.id}`}>
+                              {document.name}
+                            </Form.Label>
+                            <div
+                              className="border p-3 rounded d-flex align-items-center justify-content-center bg-light"
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleFileDrop(e, document)}
+                              style={{ cursor: 'pointer' }}
                             >
-                              Upload
-                            </Button>
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => {
-                                // Handle cancel logic if needed
-                              }}
-                              disabled={uploading}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-
-                          {/* Display upload progress if uploading */}
-                          {uploading && uploadProgress > 0 && (
-                            <div className="progress mt-2"> {/* Corrected: Removed fragment */}
-                              <div
-                                className="progress-bar progress-bar-striped progress-bar-animated"
-                                style={{ width: `${uploadProgress}%` }}
-                              >
-                                {uploadProgress}%
-                              </div>
+                              <Form.Control
+                                type="file"
+                                onChange={(e) => handleFileChange(e, document)}
+                                disabled={uploading}
+                                style={{ display: 'none' }}
+                                id={`fileInput-${currentApplicant.id}-${document.id}`}
+                              />
+                              <label htmlFor={`fileInput-${currentApplicant.id}-${document.id}`} className="text-center">
+                                <p className="m-0">Drag and Drop files here</p>
+                                <p className="m-0">Or</p>
+                                <Button variant="primary" size="sm">
+                                  Choose File
+                                </Button>
+                              </label>
                             </div>
-                          )}
-                        </Form.Group>
-                      </Col>
-                      <Col md={4} className="d-flex justify-content-end">
-                        <Button
-                          variant="danger"
-                          onClick={() => handleDeleteDocument(document.id)}
-                        >
-                          🗑️
-                        </Button>
-                      </Col>
-                    </Row>
-                  </div>
-                ))
+
+                            <div className="mt-2 d-flex justify-content-end">
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => {
+                                  document.getElementById(`fileInput-${currentApplicant.id}-${document.id}`).click();
+                                }}
+                                disabled={uploading}
+                                className="mr-2"
+                              >
+                                Upload
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => {
+                                  // Handle cancel logic if needed
+                                }}
+                                disabled={uploading}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+
+                            {uploading && uploadProgress > 0 && (
+                              <div className="progress mt-2">
+                                <div
+                                  className="progress-bar progress-bar-striped progress-bar-animated"
+                                  style={{ width: `${uploadProgress}%` }}
+                                >
+                                  {uploadProgress}%
+                                </div>
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                        <Col md={4} className="d-flex justify-content-end">
+                          <Button
+                            variant="danger"
+                            onClick={() => handleDeleteDocument(document.id)}
+                          >
+                            🗑️
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
+                  ))}
+
+                  {documents[currentApplicant.id].length > 1 && (
+                    <div className="d-flex justify-content-between mt-3">
+                      <Button
+                        variant="secondary"
+                        onClick={handleBackDocument}
+                        disabled={currentDocumentIndex === 0}
+                      >
+                        ← Back
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={handleNextDocument}
+                        disabled={currentDocumentIndex === documents[currentApplicant.id].length - 1}
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <p>No documents added yet.</p>
               )}
-
-              {/* Navigation buttons for documents */}
-              <div className="d-flex justify-content-between mt-3">
-                <Button
-                  variant="secondary"
-                  onClick={handleBackDocument}
-                  disabled={currentDocumentIndex === 0 || !documents[currentApplicant.id] || documents[currentApplicant.id].length === 0}
-                >
-                  ← Back
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleNextDocument}
-                  disabled={currentDocumentIndex === (documents[currentApplicant.id] ? documents[currentApplicant.id].length - 1 : 0)}
-                >
-                  Next →
-                </Button>
-              </div>
             </div>
           )}
         </Col>
