@@ -9,7 +9,7 @@ import {
   ListGroup,
   ProgressBar,
 } from 'react-bootstrap';
-import { FaPlus, FaTrash, FaArrowLeft, FaArrowRight, FaUpload } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaArrowLeft, FaArrowRight, FaUpload, FaTimes } from 'react-icons/fa';
 import AddApplicant from './components/AddApplicant.jsx';
 import AddDocument from './components/AddDocument.jsx';
 
@@ -357,7 +357,7 @@ function App() {
                                   size="sm"
                                   onClick={() => handleClear(document.id)}
                                   disabled={uploading}
-                                >
+                                > <FaTimes />
                                   Clear
                                 </Button>
                               </div>
