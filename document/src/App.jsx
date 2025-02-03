@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Container, Row, Col, Button, Form } from 'react-bootstrap';
-import AddApplicant from './components/AddApplicant.jsx';
-import AddDocument from './components/AddDocument.jsx';
+import AddApplicant from './components/AddApplicant.jsx'; // Make sure these components exist
+import AddDocument from './components/AddDocument.jsx';   // Make sure these components exist
 
 function App() {
   const [applicants, setApplicants] = useState([]);
@@ -20,21 +20,16 @@ function App() {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [currentApplicantIndex, setCurrentApplicantIndex] = useState(0);
 
-  const handleAddApplicant = () => {
-    setShowApplicantModal(true);
-  };
+  const fileInputRef = useRef(null); // Create a ref
+
+  const handleAddApplicant = () => setShowApplicantModal(true);
 
   const handleSaveApplicant = () => {
     if (!newApplicantName.trim()) {
       alert('Please enter an applicant name.');
       return;
     }
-
-    const newApplicant = {
-      id: Date.now(),
-      name: newApplicantName.trim(),
-    };
-
+    const newApplicant = { id: Date.now(), name: newApplicantName.trim() };
     setApplicants([...applicants, newApplicant]);
     setCurrentApplicant(newApplicant);
     setDocuments({ ...documents, [newApplicant.id]: [] });
@@ -64,31 +59,19 @@ function App() {
     }
   };
 
-  const handleAddDocument = () => {
-    setShowDocumentModal(true);
-  };
+  const handleAddDocument = () => setShowDocumentModal(true);
 
   const handleSaveDocument = () => {
     if (!currentApplicant) {
       alert('No applicant selected.');
       return;
     }
-
     if (!newDocumentName.trim()) {
       alert('Please enter a document name.');
       return;
     }
-
-    const newDocument = {
-      id: Date.now(),
-      name: newDocumentName.trim(),
-    };
-
-    setDocuments({
-      ...documents,
-      [currentApplicant.id]: [...(documents[currentApplicant.id] || []), newDocument],
-    });
-
+    const newDocument = { id: Date.now(), name: newDocumentName.trim() };
+    setDocuments({ ...documents, [currentApplicant.id]: [...(documents[currentApplicant.id] || []), newDocument] });
     setNewDocumentName('');
     setShowDocumentModal(false);
   };
@@ -100,61 +83,96 @@ function App() {
 
   const handleDeleteDocument = (documentId) => {
     if (!currentApplicant) return;
-
     if (window.confirm('Are you sure you want to delete this document?')) {
-      setDocuments({
-        ...documents,
-        [currentApplicant.id]: documents[currentApplicant.id].filter(
-          (doc) => doc.id !== documentId
-        ),
-      });
+      setDocuments({ ...documents, [currentApplicant.id]: documents[currentApplicant.id].filter((doc) => doc.id !== documentId) });
     }
   };
 
   const handleFileChange = (event, document) => {
-    const file = event.target.files[0];
+    const file = event.target.files[0]; // Get the selected file
     console.log(`File selected for ${document.name}:`, file);
 
-    if (file) {
-      // Handle file selection if needed
-    }
+    // Store the selected file in the document object (or a separate state variable)
+    setDocuments(prevDocuments => ({
+      ...prevDocuments,
+      [currentApplicant.id]: prevDocuments[currentApplicant.id].map(doc =>
+        doc.id === document.id ? { ...doc, file: file } : doc // Update the document with the file
+      )
+    }));
+
   };
 
-  const handleFileUpload = (file, document) => {
-    setUploading(true);
-    // Implement actual file upload logic here (using file)
-    // ... (Your fetch or Axios upload code)
+  const handleFileUpload = (document) => { // Now takes the document as argument
+    if (!document.file) {
+      alert("Please select a file to upload.");
+      return;
+    }
 
-    // Simulate upload progress (remove when you have real upload)
-    const intervalId = setInterval(() => {
-      setUploadProgress((prevProgress) => {
-        const newProgress = prevProgress + 20;
-        if (newProgress >= 100) {
-          clearInterval(intervalId);
-          setUploading(false);
-          setUploadProgress(0);
-          console.log(`File uploaded for ${document.name}`);
-          alert(`File uploaded for ${document.name}`);
+    const file = document.file; // Access the file from the document object
+    setUploading(true);
+    // ***REPLACE THIS WITH YOUR ACTUAL UPLOAD LOGIC***
+    const formData = new FormData();
+    formData.append('file', file); // Append the file to the form data
+
+    fetch('/your-api-endpoint', { // Replace '/your-api-endpoint'
+      method: 'POST',
+      body: formData,
+      // Add any necessary headers (e.g., Authorization)
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`); // Handle HTTP errors
         }
-        return newProgress;
+        return response.json(); // Or response.text() if your server sends plain text
+      })
+      .then(data => {
+        console.log('File uploaded successfully:', data);
+        alert(`File "${document.name}" uploaded!`); // Or handle successful upload however you want
+      })
+      .catch(error => {
+        console.error('Error uploading file:', error);
+        alert(`Error uploading file: ${error.message}`); // Show a user-friendly error message
+      })
+      .finally(() => {
+        setUploading(false);
+        setUploadProgress(0);
       });
-    }, 500);
+
+    // Simulate upload progress (remove in production)
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setUploadProgress(progress);
+      if (progress >= 100) {
+        clearInterval(interval);
+        setUploading(false);
+        setUploadProgress(0);
+      }
+    }, 200);
   };
 
   const handleFileDrop = (event, document) => {
-    event.preventDefault();
+    event.preventDefault(); // Prevent default drag behavior
+    event.stopPropagation(); // Stop event from bubbling up
+
     const files = event.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
       console.log(`File dropped for ${document.name}:`, file);
-      handleFileUpload(file, document);
+
+      // Update the document with the dropped file:
+      setDocuments(prevDocuments => ({
+        ...prevDocuments,
+        [currentApplicant.id]: prevDocuments[currentApplicant.id].map(doc =>
+          doc.id === document.id ? { ...doc, file: file } : doc
+        )
+      }));
     }
   };
 
   const handleDragOver = (event) => {
-    event.preventDefault();
+    event.preventDefault(); // Essential to allow drop
   };
-
   const handleNextDocument = () => {
     if (currentApplicant && documents[currentApplicant.id] && currentDocumentIndex < documents[currentApplicant.id].length - 1) {
       setCurrentDocumentIndex(currentDocumentIndex + 1);
@@ -202,21 +220,13 @@ function App() {
           {applicants.map((applicant) => (
             <div key={applicant.id} className="mb-2 d-flex align-items-center">
               <Button
-                variant={
-                  currentApplicant && currentApplicant.id === applicant.id
-                    ? 'primary'
-                    : 'outline-primary'
-                }
+                variant={currentApplicant && currentApplicant.id === applicant.id ? 'primary' : 'outline-primary'}
                 onClick={() => handleApplicantSelect(applicant)}
                 className="flex-grow-1 text-left"
               >
                 {applicant.name}
               </Button>
-              <Button
-                variant="danger"
-                className="ml-2"
-                onClick={() => handleDeleteApplicant(applicant.id)}
-              >
+              <Button variant="danger" className="ml-2" onClick={() => handleDeleteApplicant(applicant.id)}>
                 🗑️
               </Button>
             </div>
@@ -225,15 +235,7 @@ function App() {
 
         <Col md={9}>
           {currentApplicant && (
-            <div
-              className="document-section"
-              style={{
-                border: '1px solid #ccc',
-                padding: '20px',
-                marginBottom: '20px',
-                borderRadius: '5px',
-              }}
-            >
+            <div className="document-section" style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '5px' }}>
               <Row className="align-items-center mb-3">
                 <Col>
                   <h2>{currentApplicant.name} - Documents</h2>
@@ -252,7 +254,7 @@ function App() {
                       key={document.id}
                       className={`mb-3 ${currentDocumentIndex === docIndex ? 'active-document' : ''}`}
                       style={{
-                        backgroundColor: currentDocumentIndex === docIndex ? '#f0f0f0' : 'transparent',
+                        backgroundColor: currentDocumentIndex === docIndex ? '#f0f0f0' : 'transparent', // Corrected condition
                         padding: '10px',
                         borderRadius: '5px',
                       }}
@@ -260,26 +262,35 @@ function App() {
                       <Row className="align-items-center">
                         <Col md={8}>
                           <Form.Group>
-                            <Form.Label htmlFor={`fileInput-<span class="math-inline">\{currentApplicant\.id\}\-</span>{document.id}`}>
+                            <Form.Label htmlFor={`fileInput-${currentApplicant.id}-${document.id}`}>
                               {document.name}
                             </Form.Label>
-                            <div
+                            <div  // Drag and Drop Area
                               className="border p-3 rounded d-flex align-items-center justify-content-center bg-light"
                               onDragOver={handleDragOver}
-                              onDrop={(e) => handleFileDrop(e, document)}
+                              onDrop={(e) => handleFileDrop(e, document)} // handleFileDrop is now called here.
                               style={{ cursor: 'pointer' }}
                             >
                               <Form.Control
                                 type="file"
-                                onChange={(e) => handleFileChange(e, document)}
+                                onChange={(e) => handleFileChange(e, document)} // Call handleFileChange on change
                                 disabled={uploading}
                                 style={{ display: 'none' }}
                                 id={`fileInput-${currentApplicant.id}-${document.id}`}
+                                ref={fileInputRef}
                               />
                               <label htmlFor={`fileInput-${currentApplicant.id}-${document.id}`} className="text-center">
                                 <p className="m-0">Drag and Drop files here</p>
                                 <p className="m-0">Or</p>
-                                <Button variant="primary" size="sm">
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (fileInputRef.current) {
+                                      fileInputRef.current.click();
+                                    }
+                                  }}
+                                >
                                   Choose File
                                 </Button>
                               </label>
@@ -289,10 +300,8 @@ function App() {
                               <Button
                                 variant="success"
                                 size="sm"
-                                onClick={() => {
-                                  document.getElementById(`fileInput-${currentApplicant.id}-${document.id}`).click();
-                                }}
-                                disabled={uploading}
+                                onClick={() => handleFileUpload(document)} // Call handleFileUpload with the document
+                                disabled={uploading || !document.file} // Disable if uploading or no file selected
                                 className="mr-2"
                               >
                                 Upload
@@ -322,10 +331,7 @@ function App() {
                           </Form.Group>
                         </Col>
                         <Col md={4} className="d-flex justify-content-end">
-                          <Button
-                            variant="danger"
-                            onClick={() => handleDeleteDocument(document.id)}
-                          >
+                          <Button variant="danger" onClick={() => handleDeleteDocument(document.id)}>
                             🗑️
                           </Button>
                         </Col>
@@ -335,11 +341,7 @@ function App() {
 
                   {documents[currentApplicant.id].length > 1 && (
                     <div className="d-flex justify-content-between mt-3">
-                      <Button
-                        variant="secondary"
-                        onClick={handleBackDocument}
-                        disabled={currentDocumentIndex === 0}
-                      >
+                      <Button variant="secondary" onClick={handleBackDocument} disabled={currentDocumentIndex === 0}>
                         ← Back
                       </Button>
                       <Button
@@ -360,20 +362,22 @@ function App() {
         </Col>
       </Row>
 
-      {applicants.length > 1 && ( // Conditional rendering for applicant buttons
-        <Row className="mt-3">
-          <Col>
-            <div className="d-flex justify-content-between">
-              <Button variant="secondary" onClick={handleBackApplicant} disabled={currentApplicantIndex === 0}>
-                ← Back
-              </Button>
-              <Button variant="primary" onClick={handleNextApplicant} disabled={currentApplicantIndex === applicants.length - 1}>
-                Next →
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      )}
+      {
+        applicants.length > 1 && (
+          <Row className="mt-3">
+            <Col>
+              <div className="d-flex justify-content-between">
+                <Button variant="secondary" onClick={handleBackApplicant} disabled={currentApplicantIndex === 0}>
+                  ← Back
+                </Button>
+                <Button variant="primary" onClick={handleNextApplicant} disabled={currentApplicantIndex === applicants.length - 1}>
+                  Next →
+                </Button>
+              </div>
+            </Col>
+          </Row>
+        )
+      }
 
       {/* Modals */}
       <AddApplicant
@@ -391,7 +395,7 @@ function App() {
         newDocumentName={newDocumentName}
         setNewDocumentName={setNewDocumentName}
       />
-    </Container>
+    </Container >
   );
 }
 
